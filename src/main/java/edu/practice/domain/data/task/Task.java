@@ -2,6 +2,8 @@ package edu.practice.domain.data.task;
 
 import java.time.LocalDateTime;
 
+import static edu.practice.domain.ToDoAppHelper.getTaskInfo;
+
 public class Task {
     private final int id;
     private String name, description;
@@ -54,12 +56,6 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", dueDateTime=" + dueDateTime +
-                ", status=" + status +
-                '}';
+        return getTaskInfo(this);
     }
 }

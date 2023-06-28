@@ -4,6 +4,8 @@ import edu.practice.domain.data.task.Task;
 
 import java.util.List;
 
+import static edu.practice.domain.ToDoAppHelper.getTaskListInfo;
+
 public class TaskList implements TaskListRepository {
     private String name;
     private List<Task> tasks;
@@ -31,9 +33,6 @@ public class TaskList implements TaskListRepository {
 
     @Override
     public String toString() {
-        return "TaskList{" +
-                "name='" + name + '\'' +
-                ", tasks=" + tasks +
-                '}';
+        return getTaskListInfo(this);
     }
 }
