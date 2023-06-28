@@ -1,4 +1,4 @@
-package edu.practice;
+package edu.practice.presentation;
 
 
 public class Main {
