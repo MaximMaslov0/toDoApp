@@ -9,6 +9,8 @@ import edu.practice.domain.data.JsonConverter;
 import edu.practice.domain.data.task.Task;
 import edu.practice.domain.data.taskList.TaskList;
 import edu.practice.domain.data.taskList.TaskListsDataSource;
+import edu.practice.domain.data.taskList.criteria.TaskSortingCriterion;
+import edu.practice.domain.data.taskList.criteria.TaskToStringCriterion;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -34,18 +36,29 @@ public class Main {
         final TaskListsDataSource taskListsDataSource = new TaskListsDataSource(path, jsonConverter);
         final ToDoApp toDoApp = new ToDoApp(taskListsDataSource, taskLists);
 
-        System.out.println(toDoApp.hasNameCopy("TaskList1"));
-        toDoApp.addTaskList(taskList1);
-        System.out.println(toDoApp.allTaskListsToString());
-        toDoApp.sortByName();
-        System.out.println(toDoApp.allTaskListsToString());
-        toDoApp.removeTaskList(taskList2);
-        System.out.println(toDoApp.allTaskListsToString());
-        toDoApp.addTaskList(taskList2);
-        System.out.println(toDoApp.searchTaskList("Task").stream().map(String::valueOf)
-                .collect(Collectors.joining()));
-        toDoApp.renameTaskList(taskList2, "TaskList2");
-        System.out.println(toDoApp.allTaskListsToString());
+        System.out.println(taskList1.hasIdCopy(2));
+        taskList1.addTask(task3);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+        taskList1.undoTask(task1);
+        taskList1.doTask(task3);
+        taskList1.updateTask(task2, "test name", "test description", LocalDateTime.now());
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+        taskList1.sort(TaskSortingCriterion.BY_NAME);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+        taskList1.sort(TaskSortingCriterion.BY_STATUS);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+        taskList1.sort(TaskSortingCriterion.BY_ID);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+        taskList1.sort(TaskSortingCriterion.BY_DUE_DATE);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
+
+        final String tasksUsingSearch = taskList1.searchTask("Task").stream()
+                .map(String::valueOf).collect(Collectors.joining());
+
+        System.out.println(taskList1.searchTask(1) + "\n" + tasksUsingSearch +
+                taskList1.tasksToString(TaskToStringCriterion.DONE) + taskList1.tasksToString(TaskToStringCriterion.UNDONE));
+        taskList1.removeTask(task1);
+        System.out.println(taskList1.tasksToString(TaskToStringCriterion.ALL));
 
         final Scanner scanner = new Scanner(System.in);
         String command;
