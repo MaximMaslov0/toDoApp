@@ -3,11 +3,11 @@ package edu.practice.domain;
 import edu.practice.domain.data.task.Task;
 import edu.practice.domain.data.taskList.TaskList;
 
-import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
+import static edu.practice.domain.data.LocalDateTimeAdapter.OUTPUT_FORMATTER;
+
 public abstract class ToDoAppHelper {
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("EEEE, dd MMM yyyy / HH:mm");
     public static final String STRAIGHT_LINE = "\n" + "—".repeat(143) + "\n",
             STAR_LINE = "\n" + "★".repeat(107) + "\n",
             MIXED_LINE = "\n" + "——————------".repeat(12) + "\n";
@@ -17,7 +17,7 @@ public abstract class ToDoAppHelper {
                 "Завдання #" + task.getId() + MIXED_LINE +
                 "Назва: " + task.getName() + MIXED_LINE +
                 "Опис: " + task.getDescription() + MIXED_LINE +
-                "Термін виконання: " + FORMATTER.format(task.getDueDateTime()) + MIXED_LINE +
+                "Термін виконання: " + OUTPUT_FORMATTER.format(task.getDueDateTime()) + MIXED_LINE +
                 "Статус: " + task.getStatus() +
                 STRAIGHT_LINE;
     }
