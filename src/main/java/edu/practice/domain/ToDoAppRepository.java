@@ -20,5 +20,7 @@ public interface ToDoAppRepository {
 
     void renameTaskList(TaskList taskList, String name);
 
+    String getNotificationsMessageAndUndoTasks();
+
     void saveChanges() throws IOException;
 }

@@ -1,14 +1,58 @@
 [
   {
-    "name": "new name",
+    "name": "літо",
     "tasks": []
   },
   {
-    "name": "test1",
-    "tasks": []
+    "name": "домашні справи",
+    "tasks": [
+      {
+        "id": 1,
+        "name": "дрова",
+        "description": "пилити, возити, колоти",
+        "dueDateTime": "вівторок, 01 серп. 2023 / 15:00",
+        "status": "WORKING_ON_IT"
+      },
+      {
+        "id": 2,
+        "name": "картошка",
+        "description": "копати",
+        "dueDateTime": "пʼятниця, 01 вер. 2023 / 00:00",
+        "status": "WORKING_ON_IT"
+      }
+    ]
   },
   {
-    "name": "test2",
-    "tasks": []
+    "name": "навчання",
+    "tasks": [
+      {
+        "id": 4,
+        "name": "name",
+        "description": "description",
+        "dueDateTime": "пʼятниця, 01 груд. 2023 / 04:00",
+        "status": "WORKING_ON_IT"
+      },
+      {
+        "id": 3,
+        "name": "test",
+        "description": "test",
+        "dueDateTime": "середа, 01 груд. 2004 / 04:00",
+        "status": "STUCK"
+      },
+      {
+        "id": 1,
+        "name": "пояснювальна записка",
+        "description": "алгоритмізація та програмування, обчислювальна практика",
+        "dueDateTime": "понеділок, 03 лип. 2023 / 00:00",
+        "status": "STUCK"
+      },
+      {
+        "id": 2,
+        "name": "програма",
+        "description": "закінчити тестування програми ToDoApp",
+        "dueDateTime": "понеділок, 03 лип. 2023 / 09:00",
+        "status": "STUCK"
+      }
+    ]
   }
 ]

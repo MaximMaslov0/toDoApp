@@ -7,24 +7,28 @@ import edu.practice.domain.ToDoApp;
 import edu.practice.domain.data.GsonConverter;
 import edu.practice.domain.data.JsonConverter;
 import edu.practice.domain.data.LocalDateTimeAdapter;
+import edu.practice.domain.data.task.Task;
 import edu.practice.domain.data.taskList.TaskList;
 import edu.practice.domain.data.taskList.TaskListsDataSource;
+import edu.practice.domain.data.taskList.criteria.TaskSortingCriterion;
+import edu.practice.domain.data.taskList.criteria.TaskToStringCriterion;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static edu.practice.presentation.io.Input.getInputString;
-import static edu.practice.presentation.io.Output.*;
+import static edu.practice.domain.data.LocalDateTimeAdapter.INPUT_FORMATTER;
+import static edu.practice.presentation.Getter.*;
+import static edu.practice.presentation.Printer.*;
 
 public class Main {
     public static void main(String[] args) {
-        final Path path = Path.of("C:\\Maxim Maslov\\projects\\2023\\java\\my projects\\toDoApp\\src\\main\\java\\edu\\practice\\domain\\data\\taskList\\taskListsData.json");
+        final String absolutePathString = "C:\\Maxim Maslov\\projects\\2023\\java\\my projects\\toDoApp\\src\\main\\java\\edu\\practice\\domain\\data\\taskList\\taskListsData.json";
         final Gson gson = new GsonBuilder().setPrettyPrinting().
                 registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter()).create();
+        final Path path = Path.of(absolutePathString);
         final JsonConverter jsonConverter = new GsonConverter(gson);
         final TaskListsDataSource taskListsDataSource = new TaskListsDataSource(path, jsonConverter);
         final List<TaskList> taskLists;
@@ -34,7 +38,7 @@ public class Main {
             if (taskListsDataSource.readTaskLists() == null) {
                 taskLists = new ArrayList<>();
 
-                System.out.println(WELCOME_TEXT);
+                printWelcomeText();
                 do {
                     command = getInputString("Введіть команду: ");
 
@@ -43,8 +47,8 @@ public class Main {
                         final TaskList taskList = new TaskList(name, new ArrayList<>());
 
                         taskLists.add(taskList);
-                        System.out.println("\nВи успішно створили свій перший список з назвою \"" + name + "\"!!!");
-                    } else System.out.println(INCORRECT_COMMAND_MESSAGE);
+                        printFirstTaskListMessage(taskList);
+                    } else printIncorrectCommandMessage();
                 } while (!command.equals("/addTaskList"));
             } else taskLists = taskListsDataSource.readTaskLists();
         } catch (IOException e) {
@@ -54,163 +58,186 @@ public class Main {
         final ToDoApp toDoApp = new ToDoApp(taskListsDataSource, taskLists);
 
         do {
+            System.out.println("\n" + toDoApp.getNotificationsMessageAndUndoTasks() + "\n");
+
             command = getInputString("Введіть команду: ");
 
             switch (command) {
+                //tested
                 case "/sortTaskLists" -> {
                     toDoApp.sortByName();
-                    System.out.println("\nСписки посортовано за назвою");
+                    printSortingTaskListsByNameMessage();
                 }
+                //tested
                 case "/addTaskList" -> {
-                    String name = "";
+                    final TaskList taskList = getInputTaskList(toDoApp);
 
-                    while (!name.equals("/backToMain")) {
-                        name = getInputString("Введіть назву списку (/backToMain - повернутись до головного меню): ");
-                        final boolean isNameCopy = toDoApp.hasNameCopy(name);
+                    toDoApp.addTaskList(taskList);
+                    printAddingOrRemovingTaskListMessage("додали", taskList);
+                }
+                //tested
+                case "/removeTaskList" -> {
+                    while (true) {
+                        final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
 
-                        if (isNameCopy) System.out.println("\nТака назва вже існує!!!");
+                        if (taskListsUsingSearch.size() != 1)
+                            printSearchingSeveralOrNoneTaskListMessage(taskListsUsingSearch,
+                                    "\nБудь ласка, введіть повну назву, щоб видалити конкретний список!");
                         else {
-                            final TaskList taskList = new TaskList(name, new ArrayList<>());
+                            final TaskList taskList = taskListsUsingSearch.get(0);
 
-                            toDoApp.addTaskList(taskList);
-                            System.out.println("\nВи додали список з назвою \"" + name + "\"!!!");
+                            toDoApp.removeTaskList(taskList);
+                            printAddingOrRemovingTaskListMessage("видалили", taskList);
                             break;
                         }
                     }
                 }
-                case "/removeTaskList" -> {
-                    String fullName = "";
-
-                    while (!fullName.equals("/backToMain")) {
-                        fullName = getInputString("Введіть повну назву списку (/backToMain - повернутись до головного меню): ");
-                        final List<TaskList> taskListsUsingSearch = toDoApp.searchTaskList(fullName);
-
-                        if (taskListsUsingSearch.size() > 1) {
-                            final String taskListsUsingSearchToString = taskListsUsingSearch.stream()
-                                    .map(String::valueOf).collect(Collectors.joining());
-
-                            System.out.println("\nЗнайдено кілька списків (" +
-                                    taskListsUsingSearch.size() + "), які містять таку назву:\n"
-                                    + taskListsUsingSearchToString +
-                                    "\nБудь ласка, введіть повну назву, щоб видалити конкретний список!!!");
-                        } else if (taskListsUsingSearch.size() == 1) {
-                            final TaskList taskList = taskListsUsingSearch.get(0);
-
-                            toDoApp.removeTaskList(taskList);
-                            System.out.println("\nВи видалили список з назвою \"" + taskList.getName() + "\"!!!");
-                            break;
-                        } else
-                            System.out.println("\nНе знайдено список з такою назвою...\nБудь ласка, введіть повну назву, щоб видалити конкретний список!!!");
-                    }
-                }
+                //tested
                 case "/searchTaskList" -> {
-                    final String name = getInputString("Введіть назву списку: ");
-                    final List<TaskList> taskListsUsingSearch = toDoApp.searchTaskList(name);
+                    final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
 
-                    if (taskListsUsingSearch.size() > 1) {
-                        final String taskListsUsingSearchToString = taskListsUsingSearch.stream()
-                                .map(String::valueOf).collect(Collectors.joining());
-
-                        System.out.println("\nЗнайдено кілька списків (" +
-                                taskListsUsingSearch.size() + "), які містять таку назву: "
-                                + taskListsUsingSearchToString);
-                    } else {
-                        final TaskList taskList = taskLists.get(0);
-
-                        System.out.println("\nРезультат пошуку: " + taskList);
-                    }
+                    printSearchingSeveralOrNoneTaskListMessage(taskListsUsingSearch, "");
                 }
-                case "/showAllTaskLists" -> System.out.println("\n" + toDoApp.allTaskListsToString());
+                //tested
+                case "/showAllTaskLists" -> System.out.print("\n" + toDoApp.allTaskListsToString());
+                //tested
                 case "/processTaskList" -> {
-                    String fullName = "";
+                    while (true) {
+                        final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
 
-                    while (!fullName.equals("/backToMain")) {
-                        fullName = getInputString("Введіть повну назву списку (/backToMain - повернутись до головного меню): ");
-                        final List<TaskList> taskListsUsingSearch = toDoApp.searchTaskList(fullName);
-
-                        if (taskListsUsingSearch.size() > 1) {
-                            final String taskListsUsingSearchToString = taskListsUsingSearch.stream()
-                                    .map(String::valueOf).collect(Collectors.joining());
-
-                            System.out.println("\nЗнайдено кілька списків (" +
-                                    taskListsUsingSearch.size() + "), які містять таку назву:\n"
-                                    + taskListsUsingSearchToString +
-                                    "\nБудь ласка, введіть повну назву, щоб видалити конкретний список!!!");
-                        } else {
+                        if (taskListsUsingSearch.size() != 1)
+                            printSearchingSeveralOrNoneTaskListMessage(taskListsUsingSearch,
+                                    "\nБудь ласка, введіть повну назву, щоб вибрати конкретний список!");
+                        else {
                             final TaskList taskList = taskListsUsingSearch.get(0);
                             String taskCommand;
 
-                            System.out.println("\nВи вибрали список з назвою \"" + taskList.getName() + "\" для опрацювання завдань!");
-
+                            printProcessingTaskListMessage(taskList);
                             do {
+                                System.out.println(toDoApp.getNotificationsMessageAndUndoTasks());
+
                                 taskCommand = getInputString("Введіть команду для опрацювання завдань (/backToMain - повернутись в головне меню): ");
+
                                 switch (taskCommand) {
+                                    //tested
                                     case "/sortTasks" -> {
+                                        while (true) {
+                                            final TaskSortingCriterion taskSortingCriterion = getTaskSortingCriterionUsingInputString();
 
+                                            if (taskSortingCriterion != null) {
+                                                taskList.sort(taskSortingCriterion);
+                                                printSortingTasksMessage(taskSortingCriterion);
+                                                break;
+                                            } else printIncorrectCriterionMessage();
+                                        }
                                     }
-                                    case "/addTasks" -> {
+                                    //tested
+                                    case "/addTask" -> {
+                                        final Task task = getInputTask(taskList);
 
+                                        taskList.addTask(task);
+                                        printAddingOrRemovingTaskMessage("додали", task);
                                     }
+                                    //tested
                                     case "/removeTask" -> {
+                                        final Task task = getTaskUsingInputId(taskList);
 
+                                        taskList.removeTask(task);
+                                        printAddingOrRemovingTaskMessage("видалили", task);
                                     }
+                                    //tested
                                     case "/searchTask" -> {
+                                        while (true) {
+                                            final String criterion = getInputString("Введіть критерій пошуку: ");
 
+                                            if (criterion.equals("byId")) {
+                                                final int id = getInputInt("Введіть унікальний номер: ");
+                                                final Task task = taskList.searchTask(id);
+
+                                                System.out.print("\n\nРезультат пошуку:" + task);
+                                                break;
+                                            } else if (criterion.equals("byName")) {
+                                                final String name = getInputString("Введіть назву: ");
+                                                final List<Task> tasks = taskList.searchTask(name);
+
+                                                printSearchingSeveralOrNoneTaskMessage(tasks, "");
+                                                break;
+                                            } else printIncorrectCriterionMessage();
+                                        }
                                     }
+                                    //tested
                                     case "/showTasks" -> {
+                                        while (true) {
+                                            final TaskToStringCriterion taskToStringCriterion =
+                                                    getTaskToStringCriterionUsingInputString();
 
+                                            if (taskToStringCriterion != null) {
+                                                System.out.println("\n" + taskList.tasksToString(taskToStringCriterion));
+                                                break;
+                                            } else printIncorrectCriterionMessage();
+                                        }
                                     }
+                                    //tested
                                     case "/updateTask" -> {
+                                        final Task task = getTaskUsingInputId(taskList);
+                                        final String name = getInputString("Введіть нове ім'я: "),
+                                                description = getInputString("Введіть нове ім'я: "),
+                                                dueDateTimeString = getInputString("Введіть новий термін виконання завдання (в форматі dd-MM-yyyy / HH:mm, наприклад 01-12-2004 / 04:00): ");
+                                        final LocalDateTime dueDateTime = LocalDateTime.parse(dueDateTimeString, INPUT_FORMATTER);
 
+                                        taskList.updateTask(task, name, description, dueDateTime);
+                                        System.out.print("\nВи оновили завдання #" + task.getId() + '!');
                                     }
+                                    //tested
                                     case "/doTask" -> {
+                                        final Task task = getTaskUsingInputId(taskList);
 
+                                        taskList.doTask(task);
+                                        System.out.println("\nВи виконали завдання #" + task.getId() + "!");
                                     }
+                                    //tested
+                                    case "/backToMain" -> System.out.print("\nВи повернулися до головного меню");
+                                    default -> printIncorrectCommandMessage();
                                 }
                             } while (!taskCommand.equals("/backToMain"));
                             break;
                         }
                     }
                 }
+                //tested
                 case "/renameTaskList" -> {
-                    String fullName = "";
+                    while (true) {
+                        final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
 
-                    while (!fullName.equals("/backToMain")) {
-                        fullName = getInputString("Введіть повну назву списку (/backToMain - повернутись до головного меню): ");
-                        final List<TaskList> taskListsUsingSearch = toDoApp.searchTaskList(fullName);
-
-                        if (taskListsUsingSearch.size() > 1) {
-                            final String taskListsUsingSearchToString = taskListsUsingSearch.stream()
-                                    .map(String::valueOf).collect(Collectors.joining());
-
-                            System.out.println("\nЗнайдено кілька списків (" +
-                                    taskListsUsingSearch.size() + "), які містять таку назву:\n"
-                                    + taskListsUsingSearchToString +
-                                    "\nБудь ласка, введіть повну назву, щоб редагувати назву конкретного списку!!!");
-                        } else if (taskListsUsingSearch.size() == 1) {
+                        if (taskListsUsingSearch.size() != 1)
+                            printSearchingSeveralOrNoneTaskListMessage(taskListsUsingSearch,
+                                    "\nБудь ласка, введіть повну назву, щоб редагувати назву конкретного списку!");
+                        else {
                             final TaskList taskList = taskListsUsingSearch.get(0);
-                            String newName = "";
+                            final String oldName = taskList.getName();
 
-                            while (!newName.equals("/backToMain")) {
-                                newName = getInputString("Введіть нову назву списку (/backToMain - повернутись до головного меню): ");
+                            while (true) {
+                                final String newName = getInputString("Введіть нову назву списку: ");
                                 final boolean isNameCopy = toDoApp.hasNameCopy(newName);
 
-                                if (isNameCopy) System.out.println("\nТака назва вже існує!!!");
+                                if (isNameCopy) printSomethingAlreadyExistsMessage("Така назва");
                                 else {
                                     toDoApp.renameTaskList(taskList, newName);
-                                    System.out.println("\nВи редагували назву списку: \"" + taskList.getName() + "\" -> \"" + newName + "\"!!!");
+                                    printRenamingTaskListMessage(taskList, oldName);
                                     break;
                                 }
                             }
                             break;
-                        } else
-                            System.out.println("\nНе знайдено список з такою назвою...\nБудь ласка, введіть повну назву, щоб видалити конкретний список!!!");
+                        }
                     }
                 }
-                case "/exit" -> System.out.println(EXIT_MESSAGE);
-                default -> System.out.println(INCORRECT_COMMAND_MESSAGE);
+                //tested
+                case "/exit" -> printExitText();
+                //tested
+                default -> printIncorrectCommandMessage();
             }
-        } while (!command.equals("/exit"));
+        }
+        while (!command.equals("/exit"));
         try {
             toDoApp.saveChanges();
         } catch (IOException e) {

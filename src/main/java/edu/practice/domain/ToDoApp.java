@@ -1,5 +1,7 @@
 package edu.practice.domain;
 
+import edu.practice.domain.data.task.Status;
+import edu.practice.domain.data.task.Task;
 import edu.practice.domain.data.taskList.TaskList;
 import edu.practice.domain.data.taskList.TaskListsDataSource;
 
@@ -39,12 +41,28 @@ public record ToDoApp(TaskListsDataSource taskListsDataSource, List<TaskList> ta
 
     @Override
     public String allTaskListsToString() {
-        return taskLists.stream().map(String::valueOf).collect(Collectors.joining());
+        return taskLists.stream().map(String::valueOf).collect(Collectors.joining("\n"));
     }
 
     @Override
     public void renameTaskList(TaskList taskList, String name) {
         taskList.setName(name);
+    }
+
+    @Override
+    public String getNotificationsMessageAndUndoTasks() {
+        StringBuilder notificationsMessage = new StringBuilder();
+        taskLists.forEach(taskList -> {
+            final List<Task> tasks = taskList.getTasks();
+
+            tasks.stream().filter(task -> task.getStatus() == Status.WORKING_ON_IT && taskList.isUndoneTask(task))
+                    .forEach(task -> {
+                        taskList.undoTask(task);
+                        notificationsMessage.append("\n\nУвага!!! Ви застрягли на завданні #").append(task.getId())
+                                .append(" в списку із назвою \"").append(taskList.getName()).append("\"!");
+                    });
+        });
+        return notificationsMessage.toString();
     }
 
     @Override

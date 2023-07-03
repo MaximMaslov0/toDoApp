@@ -43,6 +43,11 @@ public class TaskList implements TaskListRepository {
     }
 
     @Override
+    public boolean isUndoneTask(Task task) {
+        return LocalDateTime.now().isAfter(task.getDueDateTime());
+    }
+
+    @Override
     public void sort(TaskSortingCriterion taskSortingCriterion) {
         final Comparator<Task> byId = Comparator.comparingInt(Task::getId),
                 byName = Comparator.comparing(Task::getName),
@@ -80,11 +85,11 @@ public class TaskList implements TaskListRepository {
 
     @Override
     public String tasksToString(TaskToStringCriterion taskToStringCriterion) {
-        final String allTasks = tasks.stream().map(String::valueOf).collect(Collectors.joining()),
+        final String allTasks = tasks.stream().map(String::valueOf).collect(Collectors.joining("\n")),
                 doneTasks = tasks.stream().filter(task -> task.getStatus() == Status.DONE).map(String::valueOf)
-                        .collect(Collectors.joining()),
+                        .collect(Collectors.joining("\n")),
                 undoneTasks = tasks.stream().filter(task -> task.getStatus() == Status.STUCK).map(String::valueOf)
-                        .collect(Collectors.joining());
+                        .collect(Collectors.joining("\n"));
 
         switch (taskToStringCriterion) {
             case ALL -> {

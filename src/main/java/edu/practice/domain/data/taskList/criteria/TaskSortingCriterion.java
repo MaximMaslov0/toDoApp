@@ -6,7 +6,7 @@ public enum TaskSortingCriterion {
     BY_DUE_DATE,
     BY_STATUS;
 
-    public static TaskSortingCriterion getTaskSortingCriterion(String criterion) {
+    public static TaskSortingCriterion toTaskSortingCriterion(String criterion) {
         switch (criterion) {
             case "byId" -> {
                 return BY_ID;

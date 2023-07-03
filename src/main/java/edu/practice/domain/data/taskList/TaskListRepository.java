@@ -10,6 +10,8 @@ import java.util.List;
 public interface TaskListRepository {
     boolean hasIdCopy(int id);
 
+    boolean isUndoneTask(Task task);
+
     void sort(TaskSortingCriterion taskSortingCriterion);
 
     void addTask(Task task);
@@ -27,4 +29,5 @@ public interface TaskListRepository {
     void doTask(Task task);
 
     void undoTask(Task task);
+
 }

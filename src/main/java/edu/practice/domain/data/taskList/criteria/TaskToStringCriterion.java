@@ -5,7 +5,7 @@ public enum TaskToStringCriterion {
     DONE,
     UNDONE;
 
-    public static TaskToStringCriterion getTaskToStringCriterion(String taskToStringCriterion) {
+    public static TaskToStringCriterion toTaskToStringCriterion(String taskToStringCriterion) {
         switch (taskToStringCriterion) {
             case "all" -> {
                 return ALL;
