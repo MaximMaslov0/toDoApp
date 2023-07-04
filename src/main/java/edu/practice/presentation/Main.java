@@ -16,7 +16,9 @@ import edu.practice.domain.data.taskList.criteria.TaskToStringCriterion;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 import static edu.practice.domain.data.LocalDateTimeAdapter.INPUT_FORMATTER;
@@ -63,19 +65,16 @@ public class Main {
             command = getInputString("Введіть команду: ");
 
             switch (command) {
-                //tested
                 case "/sortTaskLists" -> {
                     toDoApp.sortByName();
                     printSortingTaskListsByNameMessage();
                 }
-                //tested
                 case "/addTaskList" -> {
                     final TaskList taskList = getInputTaskList(toDoApp);
 
                     toDoApp.addTaskList(taskList);
                     printAddingOrRemovingTaskListMessage("додали", taskList);
                 }
-                //tested
                 case "/removeTaskList" -> {
                     while (true) {
                         final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
@@ -92,15 +91,12 @@ public class Main {
                         }
                     }
                 }
-                //tested
                 case "/searchTaskList" -> {
                     final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
 
                     printSearchingSeveralOrNoneTaskListMessage(taskListsUsingSearch, "");
                 }
-                //tested
                 case "/showAllTaskLists" -> System.out.print("\n" + toDoApp.allTaskListsToString());
-                //tested
                 case "/processTaskList" -> {
                     while (true) {
                         final List<TaskList> taskListsUsingSearch = getTaskListsUsingInputName(toDoApp);
@@ -119,7 +115,6 @@ public class Main {
                                 taskCommand = getInputString("Введіть команду для опрацювання завдань (/backToMain - повернутись в головне меню): ");
 
                                 switch (taskCommand) {
-                                    //tested
                                     case "/sortTasks" -> {
                                         while (true) {
                                             final TaskSortingCriterion taskSortingCriterion = getTaskSortingCriterionUsingInputString();
@@ -131,21 +126,38 @@ public class Main {
                                             } else printIncorrectCriterionMessage();
                                         }
                                     }
-                                    //tested
                                     case "/addTask" -> {
-                                        final Task task = getInputTask(taskList);
+                                        Task task;
+                                        try {
+                                            task = getInputTask(taskList);
+                                        } catch (DateTimeParseException e) {
+                                            try {
+                                                toDoApp.saveChanges();
+                                            } catch (IOException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                            throw new RuntimeException("Ви ввели невірний формат!");
+                                        }
 
                                         taskList.addTask(task);
                                         printAddingOrRemovingTaskMessage("додали", task);
                                     }
-                                    //tested
                                     case "/removeTask" -> {
-                                        final Task task = getTaskUsingInputId(taskList);
+                                        Task task;
+                                        try {
+                                            task = getTaskUsingInputId(taskList);
+                                        } catch (InputMismatchException e) {
+                                            try {
+                                                toDoApp.saveChanges();
+                                            } catch (IOException ex) {
+                                                throw new RuntimeException(ex);
+                                            }
+                                            throw new InputMismatchException("Ви ввели невірне значення номеру");
+                                        }
 
                                         taskList.removeTask(task);
                                         printAddingOrRemovingTaskMessage("видалили", task);
                                     }
-                                    //tested
                                     case "/searchTask" -> {
                                         while (true) {
                                             final String criterion = getInputString("Введіть критерій пошуку: ");
@@ -165,7 +177,6 @@ public class Main {
                                             } else printIncorrectCriterionMessage();
                                         }
                                     }
-                                    //tested
                                     case "/showTasks" -> {
                                         while (true) {
                                             final TaskToStringCriterion taskToStringCriterion =
@@ -177,7 +188,6 @@ public class Main {
                                             } else printIncorrectCriterionMessage();
                                         }
                                     }
-                                    //tested
                                     case "/updateTask" -> {
                                         final Task task = getTaskUsingInputId(taskList);
                                         final String name = getInputString("Введіть нове ім'я: "),
@@ -188,14 +198,12 @@ public class Main {
                                         taskList.updateTask(task, name, description, dueDateTime);
                                         System.out.print("\nВи оновили завдання #" + task.getId() + '!');
                                     }
-                                    //tested
                                     case "/doTask" -> {
                                         final Task task = getTaskUsingInputId(taskList);
 
                                         taskList.doTask(task);
                                         System.out.println("\nВи виконали завдання #" + task.getId() + "!");
                                     }
-                                    //tested
                                     case "/backToMain" -> System.out.print("\nВи повернулися до головного меню");
                                     default -> printIncorrectCommandMessage();
                                 }
